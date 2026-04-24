@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a110a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Древний мир: Тест">
+  <title>Древний мир: Тест</title>
+  
+  <!-- PWA Manifest (встроенный) -->
+  <script>
+    // Встроенный манифест для упрощения
+    const manifest = {
+      name: "Древний мир: Тест",
+      short_name: "Ancient Quiz",
+      description: "Игровой тест по истории Древнего мира",
+      start_url: ".",
+      display: "standalone",
+      background_color: "#1a110a",
+      theme_color: "#1a110a",
+      orientation: "portrait-primary",
+      icons: [
+        {
+          src: "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><defs><linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2d1f12"/><stop offset="100%" stop-color="#0a0502"/></linearGradient><linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ddc29e"/><stop offset="100%" stop-color="#8b6f4c"/></linearGradient></defs><rect width="512" height="512" rx="120" fill="url(#bg)"/><circle cx="256" cy="220" r="130" fill="none" stroke="url(#gold)" stroke-width="14"/><path d="M256 110 L320 240 L256 370 L192 240 Z" fill="url(#gold)" opacity="0.9"/><circle cx="256" cy="240" r="35" fill="#1a110a" stroke="#ddc29e" stroke-width="5"/><text x="256" y="440" font-family="serif" font-size="90" font-weight="bold" fill="#ddc29e" text-anchor="middle" letter-spacing="12">ДМ</text></svg>'),
+          sizes: "512x512",
+          type: "image/svg+xml",
+          purpose: "any maskable"
+        }
+      ],
+      categories: ["education", "games"],
+      lang: "ru"
+    };
+    
+    const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(blob);
+    const link = document.createElement('link');
+    link.rel = 'manifest';
+    link.href = manifestURL;
+    document.head.appendChild(link);
+  </script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swCode = `
+          const CACHE_NAME = 'ancient-quiz-v1';
+          const ASSETS_TO_CACHE = [
+            '/',
+            '/index.html',
+            'https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap'
+          ];
+
+          self.addEventListener('install', (event) => {
+            event.waitUntil(
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
+                })
+                .then(() => self.skipWaiting())
+            );
+          });
+
+          self.addEventListener('activate', (event) => {
+            event.waitUntil(
+              caches.keys().then((cacheNames) => {
+                return Promise.all(
+                  cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                      return caches.delete(cacheName);
+                    }
+                  })
+                );
+              })
+            );
+          });
+
+          self.addEventListener('fetch', (event) => {
+            event.respondWith(
+              caches.match(event.request)
+                .then((response) => {
+                  return response || fetch(event.request).catch(() => {
+                    return new Response('Приложение работает офлайн', {
+                      status: 200,
+                      statusText: 'OK',
+                      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+                    });
+                  });
+                })
+            );
+          });
+        `;
+        
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swURL = URL.createObjectURL(swBlob);
+        
+        // Регистрируем service worker
+        navigator.serviceWorker.register(swURL)
+          .then(registration => console.log('✅ Service Worker зарегистрирован'))
+          .catch(error => console.log('⚠️ Service Worker не удалось зарегистрировать:', error));
+      });
+    }
+  </script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+      position: fixed;
+      width: 100%;
+    }
+
+    body {
+      font-family: 'EB Garamond', serif;
+      background: #0d0704;
+      background-image: radial-gradient(ellipse at 50% 30%, #2d1f12 0%, #0a0502 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      padding: 10px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 450px;
+      height: auto;
+      max-height: 95vh;
+      overflow-y: auto;
+      background: linear-gradient(145deg, #f7eedb 0%, #dac8a5 100%);
+      border: 5px double #8b6f4c;
+      border-radius: 24px 6px 24px 6px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8), inset 0 0 30px rgba(255,235,180,0.5);
+      padding: 18px 12px 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: 1.8rem;
+      text-align: center;
+      color: #1f1104;
+      text-shadow: 2px 2px 0 #c2a26b;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #9b7e5a;
+    }
+
+    .stats {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+
+    .stat-card {
+      background: #1f1307;
+      padding: 8px 16px;
+      border-radius: 32px 6px 32px 6px;
+      box-shadow: inset 0 1px 4px #c9a97a, 0 4px 0 #0e0904;
+      color: #f7e7c7;
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: 1px solid #a78350;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .question-area {
+      background: #faf3e0;
+      border: 3px solid #a58357;
+      border-radius: 40px 6px 40px 6px;
+      padding: 28px 12px 16px;
+      margin-bottom: 20px;
+      box-shadow: inset 0 0 0 2px #fff3e0, 0 8px 16px rgba(0,0,0,0.4);
+      position: relative;
+    }
+
+    .civilization-badge {
+      position: absolute;
+      top: -14px;
+      left: 16px;
+      background: #7a1818;
+      color: #ffeebb;
+      padding: 6px 16px;
+      border-radius: 28px 4px 28px 4px;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 0 #3d0a0a;
+      border: 1px solid #d4a373;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .question-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin: 8px 0 20px;
+      text-align: center;
+      color: #1e140b;
+      font-family: 'Cinzel', serif;
+      padding: 0 4px;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-btn {
+      background: linear-gradient(180deg, #ddc29e 0%, #c0a06b 100%);
+      border: 3px solid #5a3f24;
+      color: #140b03;
+      padding: 14px 10px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      font-family: 'EB Garamond', serif;
+      border-radius: 24px 5px 24px 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #3e2c19, 0 2px 6px rgba(0,0,0,0.25);
+      transition: all 0.08s ease;
+      text-align: center;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+
+    .option-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #3e2c19;
+    }
+
+    .option-btn.correct-feedback {
+      background: #1f5a1f;
+      border-color: #b3d9a0;
+      color: #faf6d0;
+      box-shadow: 0 0 15px #a5d6a5, 0 4px 0 #0d330d;
+    }
+
+    .option-btn.wrong-feedback {
+      background: #6b2a2a;
+      border-color: #e6b3b3;
+      color: #ffe0e0;
+      box-shadow: 0 0 12px #d66f6f, 0 4px 0 #3d1717;
+    }
+
+    .option-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 3px 0 #3e2c19;
+    }
+
+    .explanation {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      font-style: italic;
+      color: #1f2c0e;
+      font-weight: 600;
+      text-align: center;
+      background: rgba(255,255,240,0.6);
+      border-radius: 14px;
+      padding: 6px 10px;
+    }
+
+    .next-area {
+      display: flex;
+      justify-content: center;
+      margin: 12px 0;
+    }
+
+    .next-btn {
+      background: linear-gradient(180deg, #8b6f4c 0%, #5a3a1a 100%);
+      border: none;
+      border-bottom: 5px solid #2d1b07;
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      font-weight: 900;
+      padding: 12px 36px;
+      border-radius: 40px 5px 40px 5px;
+      color: #faeac9;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px #1a1209;
+      touch-action: manipulation;
+      min-height: 52px;
+    }
+
+    .next-btn:active {
+      border-bottom-width: 3px;
+      transform: translateY(2px);
+    }
+
+    .next-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .result-screen {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .final-score {
+      font-size: 2.2rem;
+      font-family: 'Cinzel', serif;
+      background: #231609;
+      display: inline-block;
+      padding: 16px 36px;
+      border-radius: 48px 8px 48px 8px;
+      color: #efdba1;
+      margin: 16px 0;
+      border: 3px solid #b69567;
+      box-shadow: 0 6px 0 #181005;
+    }
+
+    .restart-btn {
+      background: #422f1a;
+      border: none;
+      border-bottom: 5px solid #1e130a;
+      font-size: 1.2rem;
+      padding: 12px 28px;
+      color: #ffefcf;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      border-radius: 32px 4px 32px 4px;
+      cursor: pointer;
+      margin-top: 18px;
+      touch-action: manipulation;
+      min-height: 50px;
+    }
+
+    .restart-btn:active {
+      border-bottom-width: 3px;
+      transform: translateY(2px);
+    }
+
+    .footer-note {
+      margin-top: 14px;
+      color: #4a3a22;
+      text-align: right;
+      font-size: 0.7rem;
+      opacity: 0.7;
+      font-style: italic;
+    }
+
+    .offline-indicator {
+      display: none;
+      text-align: center;
+      color: #8b6f4c;
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+  <h1>⚱️ ДРЕВНИЙ МИР ⚱️</h1>
+  <div class="offline-indicator" id="offlineIndicator">📴 Офлайн-режим</div>
+  
+  <div id="quizSection">
+    <div class="stats">
+      <div class="stat-card">🏆 <span id="scoreDisplay">0</span></div>
+      <div class="stat-card">📜 <span id="questionCounter">1/20</span></div>
+    </div>
+
+    <div class="question-area">
+      <div class="civilization-badge" id="civBadge">Древний Египет</div>
+      <div class="question-text" id="questionText">Загрузка...</div>
+      <div class="options-grid" id="optionsContainer"></div>
+      <div class="explanation" id="explanationEl"></div>
+    </div>
+
+    <div class="next-area">
+      <button class="next-btn" id="nextButton" disabled>⏳ ДАЛЕЕ</button>
+    </div>
+  </div>
+
+  <div id="resultSection" style="display: none;" class="result-screen">
+    <div style="font-size: 2.2rem;">🏺🏺🏺</div>
+    <h2 style="font-family: Cinzel, serif; color: #2f1f0c; font-size: 1.4rem;">СВИТОК ПРОЧТЁН</h2>
+    <div class="final-score" id="finalScoreSpan">0 / 20</div>
+    <p style="font-size: 1rem; margin: 12px; font-style: italic;" id="resultComment"></p>
+    <button class="restart-btn" id="restartButton">⟲ НАЧАТЬ ЗАНОВО</button>
+    <p style="margin-top: 24px; opacity: 0.8; font-size: 0.8rem;">«Знание — сила, сохранённая в веках»</p>
+  </div>
+  <div class="footer-note">Древний мир · Тест · v1.0</div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // Проверка онлайн-статуса
+    const offlineIndicator = document.getElementById('offlineIndicator');
+    window.addEventListener('online', () => { offlineIndicator.style.display = 'none'; });
+    window.addEventListener('offline', () => { offlineIndicator.style.display = 'block'; });
+    if (!navigator.onLine) offlineIndicator.style.display = 'block';
+
+    const questions = [
+      { civilization: "Древний Египет", question: "Первая столица объединённого Верхнего и Нижнего Египта?", options: ["Фивы", "Мемфис", "Ахетатон", "Александрия"], correct: 1, explanation: "Мемфис — первая столица." },
+      { civilization: "Древний Египет", question: "Бог-проводник душ с головой шакала?", options: ["Тот", "Анубис", "Осирис", "Сет"], correct: 1, explanation: "Анубис — проводник в загробный мир." },
+      { civilization: "Древний Египет", question: "Мумия — это?", options: ["Священный амулет", "Неразлагающееся тело после обработки", "Гробница", "Статуя бога"], correct: 1, explanation: "Мумия — обработанное тело." },
+      { civilization: "Древний Египет", question: "Влияние природы на занятия?", options: ["Разливы Нила удобряли → земледелие", "Горы → железо", "Пустыни → скотоводство", "Леса → флот"], correct: 0, explanation: "Ил от разливов Нила → земледелие." },
+      { civilization: "Древний Китай", question: "Территория под властью китайского императора?", options: ["Срединное царство", "Поднебесная", "Великая равнина", "Империя Цинь"], correct: 1, explanation: "Поднебесная — владения императора." },
+      { civilization: "Древний Китай", question: "Материал для письма, изобретённый в Китае?", options: ["Папирус", "Пергамент", "Бумага", "Глиняные таблички"], correct: 2, explanation: "Бумага — китайское изобретение." },
+      { civilization: "Древний Китай", question: "Путь, по которому шёлк попадал в Европу?", options: ["Янтарный путь", "Великий шёлковый путь", "Соляной тракт", "Царская дорога"], correct: 1, explanation: "Великий шёлковый путь." },
+      { civilization: "Древняя Греция", question: "Остракизм в Афинах — это?", options: ["Суд черепков", "Народное собрание", "Военный совет", "Изгнание без суда"], correct: 0, explanation: "Остракизм — голосование черепками." },
+      { civilization: "Древняя Греция", question: "Боевой порядок пехоты в Греции?", options: ["Когорта", "Фаланга", "Легион", "Центурия"], correct: 1, explanation: "Фаланга — плотный строй." },
+      { civilization: "Древняя Греция", question: "Что росло на каменистой почве Греции?", options: ["Пшеница и ячмень", "Оливки и виноград", "Рис и чай", "Финики"], correct: 1, explanation: "Оливки и виноград → масло и вино." },
+      { civilization: "Древняя Палестина", question: "Что получил Моисей на горе Синай?", options: ["Золотого тельца", "Скрижали с 10 заповедями", "Ковчег", "Жезл"], correct: 1, explanation: "Скрижали — каменные доски." },
+      { civilization: "Древняя Палестина", question: "Причина развития скотоводства и земледелия?", options: ["Бассейн Иордана, плодородные земли", "Горы и руда", "Пустыни", "Джунгли"], correct: 0, explanation: "Плодородные земли у Иордана." },
+      { civilization: "Вавилон", question: "Зиккурат — это?", options: ["Дворец", "Храм-ступенчатая башня", "Гробница", "Ворота"], correct: 1, explanation: "Зиккурат — ступенчатый храм." },
+      { civilization: "Вавилон", question: "Письменность Междуречья?", options: ["Иероглифы", "Клинопись", "Алфавит", "Линейное письмо"], correct: 1, explanation: "Клинопись — знаки на глине." },
+      { civilization: "Древний Рим", question: "Гладиаторы — это?", options: ["Свободные воины", "Обученные рабы для боёв", "Жрецы", "Телохранители"], correct: 1, explanation: "Рабы, обученные для боёв." },
+      { civilization: "Древняя Индия", question: "Разряды общества в Индии?", options: ["Сословия", "Варны", "Кланы", "Филы"], correct: 1, explanation: "Варны — особые разряды." },
+      { civilization: "Древняя Индия", question: "Игра для царей, придуманная в Индии?", options: ["Го", "Сенет", "Шахматы", "Нарды"], correct: 2, explanation: "Шахматы — индийское изобретение." },
+      { civilization: "Ассирия", question: "Библиотека Ашшурбанапала называлась?", options: ["Александрийская", "Пергамская", "Библиотека глиняных книг", "Дом мудрости"], correct: 2, explanation: "Библиотека глиняных книг." },
+      { civilization: "Персия", question: "Титул персидских монархов?", options: ["Фараон", "Царь царей", "Великий хан", "Сын неба"], correct: 1, explanation: "«Царь царей» — персидский титул." },
+      { civilization: "Финикия", question: "Лилово-красная краска из моллюсков?", options: ["Индиго", "Кошениль", "Пурпур", "Киноварь"], correct: 2, explanation: "Пурпур — финикийская краска." }
+    ];
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    let shuffledQuestions = shuffleArray(questions);
+    let currentIndex = 0;
+    let score = 0;
+    let answered = false;
+    const totalQuestions = shuffledQuestions.length;
+
+    const quizSection = document.getElementById('quizSection');
+    const resultSection = document.getElementById('resultSection');
+    const civBadge = document.getElementById('civBadge');
+    const questionText = document.getElementById('questionText');
+    const optionsDiv = document.getElementById('optionsContainer');
+    const explanationEl = document.getElementById('explanationEl');
+    const nextButton = document.getElementById('nextButton');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const questionCounter = document.getElementById('questionCounter');
+    const finalScoreSpan = document.getElementById('finalScoreSpan');
+    const resultComment = document.getElementById('resultComment');
+    const restartBtn = document.getElementById('restartButton');
+
+    function updateStats() {
+      scoreDisplay.textContent = score;
+      questionCounter.textContent = `${currentIndex+1}/${totalQuestions}`;
+    }
+
+    function loadQuestion(index) {
+      answered = false;
+      const q = shuffledQuestions[index];
+      civBadge.textContent = q.civilization;
+      questionText.textContent = q.question;
+      explanationEl.textContent = '';
+      
+      let html = '';
+      q.options.forEach((opt, optIdx) => {
+        html += `<button class="option-btn" data-opt-index="${optIdx}">${opt}</button>`;
+      });
+      optionsDiv.innerHTML = html;
+      
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', onOptionClick);
+        btn.disabled = false;
+        btn.classList.remove('correct-feedback', 'wrong-feedback');
+      });
+      
+      nextButton.disabled = true;
+      updateStats();
+    }
+
+    function onOptionClick(e) {
+      if (answered) return;
+      const selectedBtn = e.currentTarget;
+      const selectedIdx = parseInt(selectedBtn.dataset.optIndex);
+      const q = shuffledQuestions[currentIndex];
+      const isCorrect = (selectedIdx === q.correct);
+      
+      answered = true;
+      
+      const allOptions = document.querySelectorAll('.option-btn');
+      allOptions.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === q.correct) {
+          btn.classList.add('correct-feedback');
+        } else if (idx === selectedIdx && !isCorrect) {
+          btn.classList.add('wrong-feedback');
+        }
+      });
+      
+      if (isCorrect) {
+        score++;
+        explanationEl.textContent = `✅ Верно! ${q.explanation}`;
+      } else {
+        explanationEl.textContent = `❌ Неверно. ${q.explanation}`;
+      }
+      
+      updateStats();
+      nextButton.disabled = false;
+      nextButton.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function handleNext() {
+      if (!answered) return;
+      
+      if (currentIndex + 1 < totalQuestions) {
+        currentIndex++;
+        loadQuestion(currentIndex);
+        document.querySelector('.question-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        showResultScreen();
+      }
+    }
+
+    function showResultScreen() {
+      quizSection.style.display = 'none';
+      resultSection.style.display = 'block';
+      finalScoreSpan.textContent = `${score} / ${totalQuestions}`;
+      const percentage = (score / totalQuestions) * 100;
+      let comment = '';
+      if (percentage >= 90) comment = '🏆 Верховный жрец знаний!';
+      else if (percentage >= 70) comment = '📚 Мудрец, отличный результат!';
+      else if (percentage >= 50) comment = '🔍 Неплохо, листай свитки дальше.';
+      else comment = '🌱 Практика приведёт к мудрости.';
+      resultComment.textContent = comment;
+    }
+
+    function restartGame() {
+      shuffledQuestions = shuffleArray(questions);
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+      quizSection.style.display = 'block';
+      resultSection.style.display = 'none';
+      loadQuestion(0);
+      updateStats();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    nextButton.addEventListener('click', handleNext);
+    restartBtn.addEventListener('click', restartGame);
+
+    loadQuestion(0);
+  })();
+</script>
+</body>
+</html>
