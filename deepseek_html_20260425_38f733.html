@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Интерактивный дашборд: Древний мир для ВПР | 5 класс</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Fredoka One', 'Nunito', 'Comic Neue', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            background: #fef7e8;
+            background-image: radial-gradient(circle at 10% 20%, rgba(255,235,205,0.4) 0%, #fef0db 100%);
+            color: #2e241f;
+            padding: 1.5rem 1.2rem 3rem;
+        }
+
+        /* заголовок */
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .hero h1 {
+            font-size: 2.3rem;
+            background: linear-gradient(135deg, #c47c3e, #9b4b1a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.05);
+            letter-spacing: -0.5px;
+        }
+        .hero p {
+            font-size: 1.1rem;
+            background: #ffe3b5;
+            display: inline-block;
+            padding: 0.3rem 1.5rem;
+            border-radius: 40px;
+            color: #6b3a1c;
+            font-weight: 600;
+            backdrop-filter: blur(2px);
+        }
+
+        /* фильтры / навигация по цивилизациям */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.7rem;
+            margin-bottom: 2rem;
+        }
+        .filter-btn {
+            background: #f4e1c1;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #5c3a21;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-family: inherit;
+        }
+        .filter-btn.active {
+            background: #c97e3a;
+            color: white;
+            box-shadow: 0 6px 12px rgba(201,126,58,0.3);
+            transform: scale(0.97);
+        }
+        .filter-btn:hover:not(.active) {
+            background: #e6c89b;
+            transform: translateY(-2px);
+        }
+
+        /* карточки стран */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .card {
+            background: rgba(255, 252, 240, 0.95);
+            border-radius: 48px 32px 48px 32px;
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            backdrop-filter: blur(2px);
+            border: 1px solid #ffecb3;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 36px -12px rgba(0,0,0,0.25);
+        }
+
+        .card-header {
+            padding: 1rem 1.5rem 0.5rem;
+            border-bottom: 4px solid #ffcd94;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            background: #fff4e4;
+        }
+        .card-header h2 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            background: linear-gradient(145deg, #bf6f2c, #8b4214);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .card-icon {
+            font-size: 2.2rem;
+        }
+
+        .card-content {
+            padding: 1.2rem 1.5rem 1.5rem;
+        }
+
+        .climate-fact {
+            background: #d9e6b3;
+            border-radius: 28px;
+            padding: 0.8rem 1rem;
+            margin-bottom: 1.4rem;
+            border-left: 10px solid #7c9c3e;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #2e4810;
+        }
+        .climate-fact span {
+            font-weight: 800;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .section-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin: 1rem 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 5px solid #e2a158;
+            padding-left: 12px;
+            color: #6b3a1a;
+        }
+
+        .def-list, .events-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 0.8rem;
+        }
+        .def-badge {
+            background: #f7e5cd;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #7b4a28;
+            border: 1px solid #f2cf9e;
+        }
+        .event-badge {
+            background: #ffefcf;
+            padding: 0.2rem 0.8rem;
+            border-radius: 24px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #a5571f;
+            border-left: 3px solid #f5b064;
+        }
+
+        .more-link {
+            text-align: right;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            color: #bc7a3e;
+            cursor: default;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.8rem;
+            color: #b48c5c;
+        }
+        
+        @media (max-width: 700px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="hero">
+    <h1>📜 Древний мир | Интерактивный дашборд</h1>
+    <p>⚡ Кликай по цивилизациям — готовься к ВПР легко!</p>
+</div>
+
+<div class="filter-bar" id="filterBar">
+    <!-- кнопки будут добавлены динамически из данных -->
+</div>
+
+<div class="dashboard-grid" id="dashboardGrid">
+    <!-- карточки стран загрузятся через js -->
+</div>
+
+<footer>
+    🏛️ 5 класс | Природа → занятия | Определения + события | Нажми на любую карточку, чтобы увидеть ВСЕ термины и события ✨
+</footer>
+
+<script>
+    // ---------- БАЗА ДАННЫХ ДРЕВНИХ ЦИВИЛИЗАЦИЙ (вся информация из файла) ----------
+    const civilizations = [
+        {
+            name: "Древний Египет",
+            icon: "𓂀🐪",
+            climateFact: "Разливы Нила удобряли почву илом → земледелие.",
+            definitions: ["Фараон — правитель", "Мемфис — первая столица", "Мумия — бальзамированное тело", "Пирамиды — гробницы фараонов", "Фивы — столица", "Геб — бог Земли", "Нут — богиня Неба", "Бастет — богиня-кошка", "Маат — истина", "Сет — пустыня", "Тот — мудрость", "Осирис — загробный мир", "Анубис — проводник душ", "Амон-Ра — бог солнца"],
+            events: ["Обожествление фараона", "Объединение Египта", "Правление Эхнатона", "Пирамида Хеопса", "Походы Тутмоса III", "Войны Рамзеса II", "Орошение полей", "Вера в Амона-Ра"]
+        },
+        {
+            name: "Древний Китай",
+            icon: "🐉🎋",
+            climateFact: "В бассейне Хуанхэ заливные луга → выращивали рис.",
+            definitions: ["Гунны — кочевники", "Хуанхэ — великая река", "Бумага — изобретение", "Поднебесная — территория императора", "«Сын неба» — титул", "Конфуцианство — учение", "Компас", "Великий шёлковый путь", "Иероглифы", "Бойница — отверстие в стене"],
+            events: ["Возникновение конфуцианства", "Правление Цинь Шихуана", "Строительство Великой стены", "Защита от гуннов", "Производство шёлка", "Изобретения Поднебесной"]
+        },
+        {
+            name: "Древняя Греция",
+            icon: "🏺🏛️",
+            climateFact: "Каменистая почва → оливки и виноград (масло, вино) + море → торговля.",
+            definitions: ["Остракизм — суд черепков", "Циклоп", "Парфенон — храм Афины", "Фаланга — строй пехоты", "Лаконичная речь (Спарта)", "Пирей — порт Афин", "Акрополь — верхний город", "Одиссея, Илиада", "Минотавр", "Агора — площадь", "Зевс", "Полисы — города-государства", "Лабиринт"],
+            events: ["Создание Илиады и Одиссеи", "Олимпийские игры", "Реформы Солона", "Троянская война", "Саламинское сражение", "Фермопилы", "Поход Александра Македонского", "Марафон", "Спартанское воспитание"]
+        },
+        {
+            name: "Древняя Палестина",
+            icon: "🌿📜",
+            climateFact: "Бассейн реки Иордан → плодородные земли и пастбища → скотоводство + земледелие.",
+            definitions: ["Ветхий Завет", "Филистимляне — враги израильтян", "Скрижали — каменные доски с заповедями", "Десять заповедей"],
+            events: ["Распад Израильского царства", "Храм царя Соломона", "Осада Иерихона", "Подвиги Самсона", "Давид и Голиаф", "Моисей и скрижали"]
+        },
+        {
+            name: "Вавилонское царство",
+            icon: "🏛️⚱️",
+            climateFact: "Почвы богаты глиной → строительство из глиняных кирпичей.",
+            definitions: ["Зиккурат — ступенчатый храм", "Иштар — богиня любви", "Клинопись — письменность клиньями"],
+            events: ["Правление Навуходоносора II", "Законы Хаммурапи", "Поклонение Шамашу"]
+        },
+        {
+            name: "Древний Рим",
+            icon: "🏛️⚔️",
+            climateFact: "Плодородные земли Апеннин → развитие земледелия.",
+            definitions: ["Гладиаторы — бои рабов", "Плебеи — простой народ", "Народный трибун", "Ликторы", "Сенат", "Этруски", "Триумф — въезд победителя"],
+            events: ["Основание на 7 холмах", "Патриции vs плебеи", "Юлий Цезарь", "Разрушение Карфагена", "Пиррова победа", "Антоний и Октавиан", "Гладиаторские бои"]
+        },
+        {
+            name: "Древняя Индия",
+            icon: "🐘🕉️",
+            climateFact: "Влажный климат, реки Инд и Ганг, плодородные почвы → земледелие.",
+            definitions: ["Буддисты", "Шахматы", "Варны — разряды", "Неприкасаемые", "Санскрит", "Рамаяна", "Брахманы — жрецы", "Карма", "Ганг — священная река"],
+            events: ["Зарождение буддизма", "Вера в переселение душ", "Правление Ашоки", "Легенда о Гаутаме", "Положение неприкасаемых", "Разделение на варны"]
+        },
+        {
+            name: "Ассирийское государство",
+            icon: "🦁⚔️",
+            climateFact: "Горы и предгорья, залежи железной руды → плавка железа, оружие.",
+            definitions: ["Тигр — река", "Ниневия — столица", "Библиотека глиняных книг", "Шеду — крылатые быки/львы"],
+            events: ["Сожжение Ниневии", "Библиотека Ашшурбанапала", "Глиняные книги"]
+        },
+        {
+            name: "Персидская держава",
+            icon: "🦁👑",
+            climateFact: "Пустынные территории Передней Азии → скотоводство и торговля.",
+            definitions: ["Сатрап — глава провинции", "Царь царей", "Царская дорога", "Сатрапия", "Персеполь — столица"],
+            events: ["Гибель Кира Великого", "Завоевания Кира", "Правление Дария I", "Марафонская битва"]
+        },
+        {
+            name: "Финикия",
+            icon: "⛵🐚",
+            climateFact: "На берегу моря, изобилие леса → морская торговля, экспорт леса.",
+            definitions: ["Пурпур — краска из моллюсков", "Тир — город-порт", "Библ — крупный порт"],
+            events: ["Основание колоний (Карфаген)", "Изобретение алфавита"]
+        }
+    ];
+
+    // функция для отображения только нескольких определений (первые 5 + счетчик)
+    function renderDefinitions(defs) {
+        if(!defs.length) return "—";
+        const maxShow = 5;
+        const visible = defs.slice(0, maxShow);
+        const remainder = defs.length - maxShow;
+        let html = `<div class="def-list">`;
+        visible.forEach(d => {
+            // немного укорачиваем слишком длинные определения для компактности
+            let shortDef = d.length > 35 ? d.slice(0, 32) + '…' : d;
+            html += `<span class="def-badge">📖 ${shortDef}</span>`;
+        });
+        if(remainder > 0) {
+            html += `<span class="def-badge">+ ещё ${remainder}</span>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    function renderEvents(events) {
+        if(!events.length) return "—";
+        const maxShow = 4;
+        const visible = events.slice(0, maxShow);
+        const remainder = events.length - maxShow;
+        let html = `<div class="events-list">`;
+        visible.forEach(e => {
+            html += `<span class="event-badge">⚡ ${e}</span>`;
+        });
+        if(remainder > 0) {
+            html += `<span class="event-badge">+ ещё ${remainder}</span>`;
+        }
+        html += `</div>`;
+        return html;
+    }
+
+    // создать карточку
+    function createCard(civ) {
+        return `
+            <div class="card" data-civ-name="${civ.name}">
+                <div class="card-header">
+                    <h2>${civ.name}</h2>
+                    <div class="card-icon">${civ.icon}</div>
+                </div>
+                <div class="card-content">
+                    <div class="climate-fact">
+                        <span>🌍 ПРИРОДА → ЗАНЯТИЯ:</span> ${civ.climateFact}
+                    </div>
+                    <div class="section-title">
+                        📚 Определения
+                    </div>
+                    ${renderDefinitions(civ.definitions)}
+                    <div class="section-title">
+                        🏛️ События
+                    </div>
+                    ${renderEvents(civ.events)}
+                    <div class="more-link">
+                        🔍 нажми на карточку — откроются все термины
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // модальное окно (полный список определений и событий)
+    function showFullDetails(civ) {
+        const modalDiv = document.createElement('div');
+        modalDiv.style.position = 'fixed';
+        modalDiv.style.top = '0';
+        modalDiv.style.left = '0';
+        modalDiv.style.width = '100%';
+        modalDiv.style.height = '100%';
+        modalDiv.style.backgroundColor = 'rgba(0,0,0,0.75)';
+        modalDiv.style.display = 'flex';
+        modalDiv.style.alignItems = 'center';
+        modalDiv.style.justifyContent = 'center';
+        modalDiv.style.zIndex = '1000';
+        modalDiv.style.backdropFilter = 'blur(5px)';
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.backgroundColor = '#fffaf0';
+        modalContent.style.maxWidth = '600px';
+        modalContent.style.width = '90%';
+        modalContent.style.maxHeight = '85vh';
+        modalContent.style.overflow = 'auto';
+        modalContent.style.borderRadius = '56px';
+        modalContent.style.padding = '1.8rem 1.5rem';
+        modalContent.style.boxShadow = '0 30px 40px rgba(0,0,0,0.3)';
+        modalContent.style.border = '3px solid #ffcf8a';
+        modalContent.style.fontFamily = 'inherit';
+        
+        const titleHtml = `
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #e2a158; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                <h2 style="font-size: 2rem; margin:0; background: linear-gradient(145deg, #bf6f2c, #8b4214); background-clip: text; -webkit-background-clip: text; color:transparent;">${civ.name} ${civ.icon}</h2>
+                <button id="closeModalBtn" style="background:#f0cfaa; border:none; font-size:1.8rem; border-radius:100px; width:42px; height:42px; cursor:pointer; transition:0.2s;">✖</button>
+            </div>
+            <div style="background:#d9e6b3; border-radius:28px; padding:12px 16px; margin-bottom:1.5rem; border-left:8px solid #7c9c3e;">
+                <span style="font-weight:800;">🌍 ПРИРОДА → ЗАНЯТИЯ:</span> ${civ.climateFact}
+            </div>
+            <div style="margin-bottom: 1.2rem;">
+                <div style="font-weight:800; font-size:1.3rem; margin-bottom:0.7rem; display:flex; align-items:center; gap:8px;">📖 <span>Все определения</span> <span style="background:#e2a158; color:white; border-radius:30px; padding:0px 10px; font-size:0.9rem;">${civ.definitions.length}</span></div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">${civ.definitions.map(d => `<span style="background:#f7e3c6; border-radius:40px; padding:6px 14px; font-size:0.85rem;">📌 ${d}</span>`).join('')}</div>
+            </div>
+            <div>
+                <div style="font-weight:800; font-size:1.3rem; margin-bottom:0.7rem; display:flex; align-items:center; gap:8px;">⚡ <span>Все события</span> <span style="background:#e2a158; color:white; border-radius:30px; padding:0px 10px; font-size:0.9rem;">${civ.events.length}</span></div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">${civ.events.map(e => `<span style="background:#ffe1b3; border-radius:30px; padding:6px 14px; font-size:0.85rem;">🏺 ${e}</span>`).join('')}</div>
+            </div>
+            <div style="margin-top: 24px; text-align:center; font-size:0.8rem; color:#9b6a3e;">💡 Запомни связь: природные условия → занятия жителей!</div>
+        `;
+        modalContent.innerHTML = titleHtml;
+        modalDiv.appendChild(modalContent);
+        document.body.appendChild(modalDiv);
+        
+        const closeBtn = modalContent.querySelector('#closeModalBtn');
+        const closeModal = () => modalDiv.remove();
+        closeBtn.addEventListener('click', closeModal);
+        modalDiv.addEventListener('click', (e) => {
+            if(e.target === modalDiv) closeModal();
+        });
+    }
+
+    // ---------- ФИЛЬТРАЦИЯ И ОТРИСОВКА ДАШБОРДА ----------
+    let activeFilter = "Все";
+
+    function renderDashboard() {
+        const grid = document.getElementById('dashboardGrid');
+        if (!grid) return;
+        let filteredCivs = civilizations;
+        if (activeFilter !== "Все") {
+            filteredCivs = civilizations.filter(civ => civ.name === activeFilter);
+        }
+        if (filteredCivs.length === 0) {
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding: 2rem; font-size:1.2rem;">🚀 Нет цивилизаций по фильтру, выбери другую!</div>`;
+            return;
+        }
+        grid.innerHTML = filteredCivs.map(civ => createCard(civ)).join('');
+        
+        // после отрисовки добавить слушатели на каждую карточку
+        document.querySelectorAll('.card').forEach(card => {
+            const civName = card.getAttribute('data-civ-name');
+            const civData = civilizations.find(c => c.name === civName);
+            if (civData) {
+                card.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showFullDetails(civData);
+                });
+                card.style.cursor = 'pointer';
+            }
+        });
+    }
+
+    function initFilterButtons() {
+        const filterContainer = document.getElementById('filterBar');
+        const allNames = ["Все", ...civilizations.map(c => c.name)];
+        filterContainer.innerHTML = '';
+        allNames.forEach(name => {
+            const btn = document.createElement('button');
+            btn.textContent = name === "Все" ? "🌍 Все цивилизации" : name;
+            btn.classList.add('filter-btn');
+            if ((activeFilter === "Все" && name === "Все") || (activeFilter === name)) {
+                btn.classList.add('active');
+            }
+            btn.addEventListener('click', () => {
+                activeFilter = name;
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderDashboard();
+            });
+            filterContainer.appendChild(btn);
+        });
+    }
+
+    // Запускаем дашборд
+    renderDashboard();
+    initFilterButtons();
+</script>
+</body>
+</html>
